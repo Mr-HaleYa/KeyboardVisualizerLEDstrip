@@ -8,6 +8,9 @@
 
 WiFiManager wm;
 
+const char* ssid     = "Taylors Wi-Fi";
+const char* password = "KarRuss0725";
+
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
 
@@ -47,7 +50,6 @@ void setup(){
 
 void connectToWifi() {
   if (WiFi.status() != WL_CONNECTED){
-    int customFieldLength = 40;
     const char* menu[] = {"wifi","info","param","sep","restart","exit"}; 
     wm.setMenu(menu,1);
     wm.setClass("invert");                                                  // dark theme web setup page
@@ -61,11 +63,24 @@ void connectToWifi() {
   }
 }
 
+void reConnectWifi(){
+  WiFi.disconnect();
+  WiFi.mode(WIFI_OFF);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+ }
+
+
 void loop(){
   int noBytes = Udp.parsePacket();
   
   if (WiFi.status() != WL_CONNECTED){  //----Ensure Wi-Fi connection---
-    connectToWifi();
+    reConnectWifi();
   }
   
   if( noBytes )
