@@ -2,8 +2,11 @@
 #include <WiFiUDP.h>
 #include <Adafruit_NeoPixel.h>
 
-const char* ssid     = "Taylors Wi-Fi";
-const char* password = "KarRuss0725";
+#include <ESP8266WebServer.h>
+#include <DNSServer.h>                    //For WiFiManager to work
+#include <WiFiManager.h>
+
+WiFiManager wm;
 
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
@@ -23,24 +26,15 @@ char packet_buf[1024];
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LEDS, PIN, NEO_GRB + NEO_KHZ800);
 
-void setup()
-{
+int value = 0;
+
+void setup(){
   Serial.begin(115200);
-  delay(10);
-
-  // We start by connecting to a WiFi network
+  delay(1000);
+  WiFi.mode(WIFI_STA);                        //explicitly set mode, esp defaults to STA+AP
   Serial.println();
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  
-  WiFi.begin(ssid, password);
-  
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
+  Serial.println("Starting wifi connection");
+  connectToWifi();
   Serial.println("");
   Serial.println("WiFi connected");  
   Serial.println("IP address: ");
@@ -49,12 +43,31 @@ void setup()
   strip.begin();
 }
 
-int value = 0;
 
-void loop()
-{
+
+void connectToWifi() {
+  if (WiFi.status() != WL_CONNECTED){
+    int customFieldLength = 40;
+    const char* menu[] = {"wifi","info","param","sep","restart","exit"}; 
+    wm.setMenu(menu,1);
+    wm.setClass("invert");                                                  // dark theme web setup page
+    Serial.println("Starting AP mode since connection failed or its not setup");
+  if (!wm.autoConnect("RGB Light Controler")) {
+    Serial.print("FATAL WI-FI CONNECT ERROER!!!");                          //If unable to setup, flash error
+    delay(1000);
+    ESP.restart();                                                          //reboot and try again
+    delay(5000);
+    }
+  }
+}
+
+void loop(){
   int noBytes = Udp.parsePacket();
-
+  
+  if (WiFi.status() != WL_CONNECTED){  //----Ensure Wi-Fi connection---
+    connectToWifi();
+  }
+  
   if( noBytes )
   {
     Serial.print("Received ");
