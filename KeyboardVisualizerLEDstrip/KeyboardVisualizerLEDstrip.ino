@@ -33,6 +33,7 @@ int value = 0;
 
 void setup(){
   Serial.begin(115200);
+  WiFi.hostname("LED_STRIP");                 // Name to show on network
   delay(1000);
   WiFi.mode(WIFI_STA);                        //explicitly set mode, esp defaults to STA+AP
   Serial.println();
